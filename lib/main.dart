@@ -13,7 +13,7 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
- //Alexis burro
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
