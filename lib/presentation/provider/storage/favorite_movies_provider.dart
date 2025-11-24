@@ -52,4 +52,23 @@ class StorageMoviesNotifier extends StateNotifier<Map<int, Movie>> {
     
     return movies;
   }
+  // --- AGREGA ESTE MÉTODO NUEVO ---
+  Future<void> toggleFavorite( Movie movie, String userId ) async {
+    
+    // 1. Actualizamos Base de Datos
+    await storageRepository.toggleFavorite(movie, userId);
+
+    // 2. Actualizamos el Estado Local (La lista que ves en pantalla)
+    final bool isMovieInFavorites = state[movie.id] != null;
+
+    if ( isMovieInFavorites ) {
+      // Si ya estaba, la borramos del mapa
+      state.remove(movie.id);
+      state = { ...state }; // Forzamos la actualización visual
+    } else {
+      // Si no estaba, la agregamos
+      state = { ...state, movie.id: movie };
+    }
+  }
+
 }

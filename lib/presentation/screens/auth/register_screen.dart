@@ -9,8 +9,10 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      // AppBar transparente para que se vea el fondo y el botón de atrás
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -21,12 +23,15 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-        // Mismo fondo degradado que el login
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: const [0.2, 0.9],
+            colors: [
+              colors.primary.withOpacity(0.9),
+              Colors.black,
+            ],
           ),
         ),
         child: const _RegisterView(),
@@ -41,30 +46,31 @@ class _RegisterView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // Altura del header en registro es un poco menor
-    const headerHeight = 180.0;
+    final colors = Theme.of(context).colorScheme;
+
+    const headerHeight = 160.0;
     final containerHeight = size.height - headerHeight;
 
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       child: Column(
         children: [
-          const SizedBox( height: 80 ),
-          // Header de registro
-          const Icon( Icons.person_add_alt_1_outlined, color: Colors.white, size: 80 ),
+          const SizedBox( height: 60 ),
+          const Icon( Icons.person_add_alt_1_rounded, color: Colors.white, size: 80 ),
           const SizedBox( height: 20 ),
 
-          // Contenedor blanco del formulario
           Container(
             height: containerHeight,
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              // Bordes redondeados simétricos, igual que el login
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: colors.surface, 
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(40),
                 topRight: Radius.circular(40),
               ),
+              boxShadow: [
+                 BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0,-5))
+              ]
             ),
             child: const _RegisterForm(),
           )
@@ -97,7 +103,9 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
   @override
   Widget build(BuildContext context) {
     
-    // Escuchar errores del provider
+    final colors = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textTheme;
+
     ref.listen(authProvider, (previous, next) {
       if ( next.errorMessage.isEmpty ) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,17 +113,20 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
       );
     });
 
-    final textStyles = Theme.of(context).textTheme;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         children: [
           const SizedBox( height: 40 ),
-          Text('Crear cuenta', style: textStyles.headlineMedium?.copyWith(fontWeight: FontWeight.bold) ),
+          Text(
+            'Crear cuenta', 
+            style: textStyles.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface
+            ) 
+          ),
           const SizedBox( height: 40 ),
 
-          // Campo: Nombre Completo
           CustomTextFormField(
             label: 'Nombre completo',
             keyboardType: TextInputType.name,
@@ -123,7 +134,6 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           ),
           const SizedBox( height: 20 ),
 
-          // Campo: Correo
           CustomTextFormField(
             label: 'Correo',
             keyboardType: TextInputType.emailAddress,
@@ -131,7 +141,6 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           ),
           const SizedBox( height: 20 ),
 
-          // Campo: Contraseña
           CustomTextFormField(
             label: 'Contraseña',
             obscureText: true,
@@ -140,13 +149,11 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           
           const SizedBox( height: 40 ),
 
-          // Botón de Registrar
           SizedBox(
             width: double.infinity,
             height: 55,
             child: FilledButton(
               onPressed: () {
-                // Llamada al provider para registrar
                 ref.read(authProvider.notifier).registerUser(
                   emailController.text, 
                   passwordController.text,
@@ -154,7 +161,8 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
                 );
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1E293B), // Mismo color oscuro
+                backgroundColor: colors.primary,
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
               ),
               child: const Text('REGISTRARSE', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -163,16 +171,15 @@ class _RegisterFormState extends ConsumerState<_RegisterForm> {
           
           const Spacer(),
 
-          // Link para volver al Login
           Padding(
             padding: const EdgeInsets.only(bottom: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('¿Ya tienes cuenta?', style: TextStyle(color: Colors.black54)),
+                Text('¿Ya tienes cuenta?', style: TextStyle(color: colors.onSurface.withOpacity(0.6))),
                 TextButton(
-                  onPressed: () => context.pop(), // Vuelve atrás
-                  child: const Text('Ingresa aquí', style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold))
+                  onPressed: () => context.pop(),
+                  child: Text('Ingresa aquí', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold))
                 )
               ],
             ),

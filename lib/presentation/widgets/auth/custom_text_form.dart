@@ -27,21 +27,18 @@ class CustomTextFormField extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     final border = OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.transparent),
-      borderRadius: BorderRadius.circular(40)
+      borderSide: BorderSide.none, // Quitamos borde duro, usamos el fill color
+      borderRadius: BorderRadius.circular(15)
     );
 
-    const borderRadius = Radius.circular(15);
-
     return Container(
-      // Padding y decoración para que se vea moderno
+      // Sombra suave para dar profundidad
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(topLeft: borderRadius, bottomLeft: borderRadius, bottomRight: borderRadius ),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
             offset: const Offset(0,5)
           )
         ]
@@ -51,20 +48,30 @@ class CustomTextFormField extends StatelessWidget {
         validator: validator,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: const TextStyle( fontSize: 20, color: Colors.black54 ),
+        // El color del texto se adapta (Blanco en dark, Negro en light)
+        style: TextStyle( fontSize: 18, color: colors.onSurface ), 
         decoration: InputDecoration(
-          floatingLabelStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
-          enabledBorder: border,
-          focusedBorder: border,
-          errorBorder: border.copyWith( borderSide: BorderSide( color: colors.error )),
-          focusedErrorBorder: border.copyWith( borderSide: BorderSide( color: colors.error )),
+          floatingLabelBehavior: FloatingLabelBehavior.never, // Etiqueta oculta al escribir para diseño limpio
           isDense: true,
-          label: label != null ? Text(label!) : null,
+          labelText: label,
           hintText: hint,
           errorText: errorMessage,
-          focusColor: colors.primary,
+          
+          // Estilos definidos en el inputDecorationTheme del AppTheme, 
+          // pero aquí aseguramos que se vean bien:
+          fillColor: colors.surfaceContainerHighest.withOpacity(0.5), // Fondo grisáceo translúcido
+          filled: true,
+          
+          labelStyle: TextStyle(color: colors.onSurfaceVariant),
+          hintStyle: TextStyle(color: colors.onSurfaceVariant.withOpacity(0.5)),
+          
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border.copyWith( borderSide: BorderSide( color: colors.primary )),
+          errorBorder: border.copyWith( borderSide: BorderSide( color: colors.error )),
+          focusedErrorBorder: border.copyWith( borderSide: BorderSide( color: colors.error )),
         ),
       ),
     );
   }
-}  
+}

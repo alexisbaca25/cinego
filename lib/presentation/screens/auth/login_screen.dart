@@ -10,16 +10,18 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     
-    // Fondo con degradado oscuro
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: const [0.2, 0.9],
             colors: [
-              Color(0xFF1E293B), 
-              Color(0xFF0F172A), 
+              colors.primary.withOpacity(0.9), // Color intenso arriba
+              Colors.black, // Negro abajo
             ],
           ),
         ),
@@ -35,7 +37,10 @@ class _LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    const headerHeight = 250.0; 
+    final colors = Theme.of(context).colorScheme;
+    
+    // Header más compacto para pantallas pequeñas
+    const headerHeight = 220.0; 
     final containerHeight = size.height - headerHeight;
 
     return SingleChildScrollView(
@@ -43,14 +48,11 @@ class _LoginView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox( height: 80 ),
+          const SizedBox( height: 60 ),
           
-          const Icon( 
-            Icons.movie_filter_outlined, 
-            color: Colors.white, 
-            size: 100 
-          ),
-          const SizedBox( height: 20 ),
+          // Icono y Título
+          const Icon( Icons.movie_filter_rounded, color: Colors.white, size: 80 ),
+          const SizedBox( height: 10 ),
           const Text(
             'Cinemapedia',
             style: TextStyle(
@@ -60,17 +62,22 @@ class _LoginView extends StatelessWidget {
               letterSpacing: 2
             ),
           ),
-          const SizedBox( height: 50 ),
+          
+          const SizedBox( height: 60 ),
 
+          // Contenedor del Formulario
           Container(
             height: containerHeight,
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: colors.surface, // Se adapta al tema (Oscuro o Claro)
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(40),
                 topRight: Radius.circular(40),
               ),
+              boxShadow: [
+                 BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0,-5))
+              ]
             ),
             child: const _LoginForm(),
           )
@@ -107,21 +114,30 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-
     
+    final colors = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textTheme;
+
     ref.listen(authProvider, (previous, next) {
       if ( next.errorMessage.isEmpty ) return;
       showSnackbar( context, next.errorMessage );
     });
-
-    final textStyles = Theme.of(context).textTheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         children: [
           const SizedBox( height: 40 ),
-          Text('Bienvenido', style: textStyles.headlineMedium?.copyWith(fontWeight: FontWeight.bold) ),
+          
+          // Título del formulario con color adaptativo
+          Text(
+            'Bienvenido', 
+            style: textStyles.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface // Asegura contraste (Blanco en dark mode)
+            ) 
+          ),
+          
           const SizedBox( height: 40 ),
 
           CustomTextFormField(
@@ -139,7 +155,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
           
           const SizedBox( height: 40 ),
 
-          // Botón de Ingresar
           SizedBox(
             width: double.infinity,
             height: 55,
@@ -151,25 +166,29 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
                 );
               },
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1E293B), // Color oscuro a juego
+                backgroundColor: colors.primary,
+                // --- CAMBIO AQUÍ: Color del texto NEGRO ---
+                foregroundColor: Colors.black, 
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
               ),
               child: const Text('INGRESAR', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ),
 
-          const Spacer(), // Empuja el contenido hacia arriba
+          const Spacer(), 
 
-          // Link a Registro
           Padding(
             padding: const EdgeInsets.only(bottom: 30),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('¿No tienes cuenta?', style: TextStyle(color: Colors.black54)),
+                Text(
+                  '¿No tienes cuenta?', 
+                  style: TextStyle(color: colors.onSurface.withOpacity(0.6)) // Texto secundario tenue
+                ),
                 TextButton(
                   onPressed: () => context.push('/register'),
-                  child: const Text('Crea una aquí', style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold))
+                  child: Text('Crea una aquí', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold))
                 )
               ],
             ),
