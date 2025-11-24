@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../provider/auth/auth_provider.dart'; 
+import 'package:go_router/go_router.dart';
+
+import 'package:cinemapedia/domain/entities/movies.dart';
+
+// Importa tus providers y el delegate
+import 'package:cinemapedia/presentation/delegates/search_movie_delegate.dart';
+import 'package:cinemapedia/presentation/provider/movies/search/search_movies_provider.dart';
+import '../../provider/auth/auth_provider.dart';
 
 class CustomAppbar extends ConsumerWidget {
   const CustomAppbar({super.key});
@@ -24,9 +31,27 @@ class CustomAppbar extends ConsumerWidget {
               Text('Cinemapedia', style: titleStyle),
               
               const Spacer(), 
+
+              // BOTÓN DE BÚSQUEDA IMPLEMENTADO
               IconButton(
                 onPressed: () {
-                 
+
+                  final searchedMovies = ref.read( searchedMoviesProvider );
+                  final searchQuery = ref.read(searchQueryProvider);
+                  
+                  showSearch<Movie?>(
+                    query: searchQuery,
+                    context: context, 
+                    delegate: SearchMovieDelegate(
+                      initialMovies: searchedMovies,
+                      searchMovies: ref.read( searchedMoviesProvider.notifier ).searchMoviesByQuery
+                    )
+                  ).then((movie) {
+                    // Si el usuario seleccionó una película, vamos a ella
+                    if ( movie == null ) return;
+                    context.push('/movie/${ movie.id }');
+                  });
+                  
                 }, 
                 icon: const Icon(Icons.search)
               ),
