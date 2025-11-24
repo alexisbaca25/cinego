@@ -2,8 +2,10 @@ import 'package:cinemapedia/config/constants/environment.dart';
 import 'package:cinemapedia/domain/datasources/movies_datasource.dart';
 import 'package:cinemapedia/domain/entities/actors.dart';
 import 'package:cinemapedia/domain/entities/movies.dart';
+import 'package:cinemapedia/domain/entities/video.dart';
 import 'package:cinemapedia/infrastructure/mappers/actor_mapper.dart';
 import 'package:cinemapedia/infrastructure/mappers/movie_mapper.dart';
+import 'package:cinemapedia/infrastructure/mappers/video_mapper.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/credits_response.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/movie_details.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/moviedb_response.dart';
@@ -103,5 +105,18 @@ class MoviedbDatasource extends MoviesDatasource {
     );
 
     return _jsonToMovies(response.data);
+  }
+
+  @override
+  Future<List<Video>> getYoutubeVideosById(int movieId) async {
+    final response = await dio.get('/movie/$movieId/videos');
+    final moviedbVideosReponse = response.data['results'] as List; // Obtenemos la lista cruda
+
+    final videos = moviedbVideosReponse
+      .where( (video) => video['site'] == 'YouTube' ) // Filtramos solo YouTube
+      .map( (video) => VideoMapper.moviedbVideoToEntity(video) )
+      .toList();
+    
+    return videos;
   }
 }

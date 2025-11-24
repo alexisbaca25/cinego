@@ -1,11 +1,19 @@
-import 'package:cinemapedia/presentation/provider/auth/auth_provider.dart';
-import 'package:cinemapedia/presentation/provider/storage/favorite_movies_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:animate_do/animate_do.dart';
+
+// Domain Entities
 import 'package:cinemapedia/domain/entities/movies.dart';
-// Asegúrate de importar tus providers. Si tienes un archivo barril úsalo, si no, ajusta estas rutas:
+
+// Providers
 import 'package:cinemapedia/presentation/provider/movies/movie_info_provider.dart';
 import 'package:cinemapedia/presentation/provider/movies/actors_by_movie_provider.dart';
+import 'package:cinemapedia/presentation/provider/movies/videos_provider.dart'; // <--- IMPORTANTE
+import 'package:cinemapedia/presentation/provider/auth/auth_provider.dart';
+import 'package:cinemapedia/presentation/provider/storage/favorite_movies_provider.dart';// Asegúrate de que este path sea correcto según tu estructura, si no, usa el de storageRepositoryProvider
+
+// Widgets
+import 'package:cinemapedia/presentation/widgets/videos/videos_from_movie.dart'; // <--- IMPORTANTE
 
 class MovieScreen extends ConsumerStatefulWidget {
   static const name = 'movie-screen';
@@ -22,10 +30,15 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Cargamos la película
+    
+    // 1. Cargar Película
     ref.read(movieInfoProvider.notifier).loadMovie(widget.movieId);
-    // 2. Cargamos los actores (¡NUEVO!)
+    
+    // 2. Cargar Actores
     ref.read(actorsByMovieProvider.notifier).loadActors(widget.movieId);
+
+    // 3. Cargar Videos (Trailer) --- NUEVO
+    ref.read(videosByMovieProvider.notifier).loadVideos(widget.movieId);
   }
 
   @override
@@ -33,7 +46,7 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
     final Movie? movie = ref.watch(movieInfoProvider)[widget.movieId];
 
     if (movie == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator( strokeWidth: 2)));
     }
 
     return Scaffold(
@@ -118,9 +131,14 @@ class _MovieDetail extends StatelessWidget {
           ),
         ),
 
-        // --- SECCIÓN DE ACTORES (NUEVO) ---
+        // Actores
         _ActorsByMovie(movieId: movie.id.toString()), 
-        // ----------------------------------
+
+        // Videos (Trailer) --- NUEVO
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: VideosFromMovie(movieId: movie.id.toString()),
+        ),
 
         const SizedBox(height: 50),
       ],
@@ -129,7 +147,7 @@ class _MovieDetail extends StatelessWidget {
 }
 
 
-// --- WIDGET NUEVO: LISTA DE ACTORES ---
+// --- WIDGET LISTA DE ACTORES ---
 class _ActorsByMovie extends ConsumerWidget {
   
   final String movieId;
@@ -162,20 +180,22 @@ class _ActorsByMovie extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Foto Actor
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    actor.profilePath,
-                    height: 180,
-                    width: 135,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const SizedBox(
-                        height: 180,
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      );
-                    },
+                FadeInRight(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      actor.profilePath,
+                      height: 180,
+                      width: 135,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const SizedBox(
+                          height: 180,
+                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        );
+                      },
+                    ),
                   ),
                 ),
 
@@ -195,6 +215,7 @@ class _ActorsByMovie extends ConsumerWidget {
     );
   }
 }
+
 class _CustomSliverAppBar extends ConsumerWidget { 
   final Movie movie;
 
@@ -203,7 +224,6 @@ class _CustomSliverAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) { 
     
-    //  el provider que nos dice si es favorita
     final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final size = MediaQuery.of(context).size;
 
@@ -214,29 +234,23 @@ class _CustomSliverAppBar extends ConsumerWidget {
       actions: [
         IconButton(
           onPressed: () async {
-            //  Lógica de guardado
-            //  Verificamos usuario
             final user = ref.read(authProvider).user;
             if (user == null) {
                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Inicia sesión para guardar')));
                return;
             }
 
-            //  Guardamos/Borramos
+            // Nota: Aquí asumo que usas 'storageRepositoryProvider'. 
+            // Si en tu código se llama diferente (ej: localStorageProvider), ajusta esta línea.
             await ref.read(storageRepositoryProvider).toggleFavorite(movie, user.id);
             
-            //  Actualizamos el icono visualmente
             ref.invalidate(isFavoriteProvider(movie.id));
           }, 
-          // El icono cambia según el estado 
           icon: isFavoriteFuture.when(
             loading: () => const CircularProgressIndicator(strokeWidth: 2),
-            
-            // CORRECCIÓN: Agregamos (as bool?) para forzar el tipo
             data: (isFavorite) => ((isFavorite as bool?) ?? false)
               ? const Icon(Icons.favorite_rounded, color: Colors.red) 
               : const Icon(Icons.favorite_border),
-            
             error: (_,__) => const Icon(Icons.error), 
           )
         )
