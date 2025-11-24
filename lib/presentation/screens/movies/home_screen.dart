@@ -1,4 +1,5 @@
 import 'package:cinemapedia/presentation/provider/movies/home_view.dart';
+import 'package:cinemapedia/presentation/screens/movies/categories_view.dart';
 import 'package:cinemapedia/presentation/widgets/movies/favorite_movies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,26 +7,24 @@ import 'package:cinemapedia/presentation/provider/providers.dart';
 import 'package:cinemapedia/presentation/widgets/widgets.dart';
 import '../../provider/auth/auth_provider.dart';
 
+
 class HomeScreen extends StatelessWidget {
   static const name = 'home_screen';
   final int pageIndex;
 
   const HomeScreen({
-    super.key,required this.pageIndex,
-    });
-    
-    final viewRoutes = const <Widget>[
-    HomeView(),      
-    SizedBox(),     
-    FavoritesView(), 
-  ];
+    super.key,
+    required this.pageIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-  final viewRoutes = <Widget>[
-      const HomeView(),          
-      const SizedBox(),         
-      const FavoritesView(),     
+
+    // ⭐ Aquí reemplazamos SizedBox() por CategoriesView()
+    final viewRoutes = <Widget>[
+      const HomeView(),
+      const CategoriesView(),   // ← NUEVO
+      const FavoritesView(),
     ];
 
     return Scaffold(
@@ -67,7 +66,6 @@ class _HomeViewState extends ConsumerState<_HomeView> {
     final upcomingMovies   = ref.watch(upComingMoviesProvider);
     final slideshowMovies  = ref.watch(movieSlideshowProvider);
     
-    // Estilos para la barra superior
     final colors = Theme.of(context).colorScheme;
     final titleStyle = Theme.of(context).textTheme.titleMedium;
 
@@ -76,12 +74,10 @@ class _HomeViewState extends ConsumerState<_HomeView> {
         SliverAppBar(
           floating: true,
           expandedHeight: 50, 
-          backgroundColor:  Colors.white,
-          
+          backgroundColor: Colors.white,
           flexibleSpace: FlexibleSpaceBar(
             titlePadding: EdgeInsets.zero, 
             centerTitle: false,
-            
             title: SafeArea(
               bottom: false,
               child: Padding(
@@ -89,29 +85,25 @@ class _HomeViewState extends ConsumerState<_HomeView> {
                 child: SizedBox(
                   width: double.infinity,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center, 
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Icono Logo
                       Icon(Icons.movie_outlined, color: colors.primary),
                       const SizedBox(width: 5),
-                      
-                      // Título Texto
                       Text('Cinemapedia', style: titleStyle),
                       const Spacer(),
-                      // Botón Búsqueda
+
+                      // Botón búsqueda
                       IconButton(
-                        onPressed: () {
-                          
-                        }, 
-                        icon: const Icon(Icons.search, color: Colors.black87)
+                        onPressed: () {},
+                        icon: const Icon(Icons.search, color: Colors.black87),
                       ),
 
-                      //Botón Salir
+                      // Botón salir
                       IconButton(
                         onPressed: () {
                           ref.read(authProvider.notifier).logout();
-                        }, 
-                        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent)
+                        },
+                        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                       ),
                     ],
                   ),
@@ -122,37 +114,40 @@ class _HomeViewState extends ConsumerState<_HomeView> {
         ),
 
         SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            return Column(
-              children: [
-                MoviesSlideshow(movies: slideshowMovies),
-                MovieHorizontalListview(
-                  movies: nowPlayingMovies,
-                  title: 'En cines',
-                  subTitle: 'Lunes 20',
-                  loadNextPage: () => ref.read(nowPlayingMoviesProvider.notifier).loadNextPage(),
-                ),
-                MovieHorizontalListview(
-                  movies: upcomingMovies,
-                  title: 'Próximamente',
-                  subTitle: 'Solo en cines',
-                  loadNextPage: () => ref.read(upComingMoviesProvider.notifier).loadNextPage(),
-                ),
-                MovieHorizontalListview(
-                  movies: popularMovies,
-                  title: 'Populares',
-                  loadNextPage: () => ref.read(popularMoviesProvider.notifier).loadNextPage(),
-                ),
-                MovieHorizontalListview(
-                  movies: topRatedMovies,
-                  title: 'Mejor calificadas',
-                  subTitle: 'Desde siempre',
-                  loadNextPage: () => ref.read(topRatedMoviesProvider.notifier).loadNextPage(),
-                ),
-                const SizedBox(height: 10),
-              ],
-            );
-          }, childCount: 1),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              return Column(
+                children: [
+                  MoviesSlideshow(movies: slideshowMovies),
+                  MovieHorizontalListview(
+                    movies: nowPlayingMovies,
+                    title: 'En cines',
+                    subTitle: 'Lunes 20',
+                    loadNextPage: () => ref.read(nowPlayingMoviesProvider.notifier).loadNextPage(),
+                  ),
+                  MovieHorizontalListview(
+                    movies: upcomingMovies,
+                    title: 'Próximamente',
+                    subTitle: 'Solo en cines',
+                    loadNextPage: () => ref.read(upComingMoviesProvider.notifier).loadNextPage(),
+                  ),
+                  MovieHorizontalListview(
+                    movies: popularMovies,
+                    title: 'Populares',
+                    loadNextPage: () => ref.read(popularMoviesProvider.notifier).loadNextPage(),
+                  ),
+                  MovieHorizontalListview(
+                    movies: topRatedMovies,
+                    title: 'Mejor calificadas',
+                    subTitle: 'Desde siempre',
+                    loadNextPage: () => ref.read(topRatedMoviesProvider.notifier).loadNextPage(),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              );
+            },
+            childCount: 1,
+          ),
         ),
       ],
     );

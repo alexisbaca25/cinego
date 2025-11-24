@@ -119,4 +119,26 @@ class MoviedbDatasource extends MoviesDatasource {
     
     return videos;
   }
+
+  @override
+  Future<List<Genre>> getGenres() async {
+    final response = await dio.get('/genre/movie/list');
+    final List<dynamic> genresJson = response.data['genres'];
+
+    return genresJson.map((json) => Genre(
+      id: json['id'], 
+      name: json['name']
+    )).toList();
+  }
+
+  @override
+  Future<List<Movie>> getMoviesByGenre(int genreId, {int page = 1}) async {
+    final response = await dio.get('/discover/movie', 
+      queryParameters: {
+        'with_genres': genreId,
+        'page': page
+      }
+    );
+    return _jsonToMovies(response.data);
+  }
 }
