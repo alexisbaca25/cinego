@@ -30,10 +30,10 @@ class VideosFromMovie extends ConsumerWidget {
     }
 
     if ( videos.isEmpty ) {
-      return const SizedBox(); // Si no hay videos, no mostramos nada
+      return const SizedBox(); 
     }
 
-    // Tomamos solo el primer video (generalmente es el trailer oficial)
+    // Tomamos solo el primer video
     return _YouTubeVideoPlayer(youtubeId: videos.first.youtubeKey, name: videos.first.name );
   }
 }
@@ -80,17 +80,10 @@ class _YouTubeVideoPlayerState extends State<_YouTubeVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Trailer', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 10),
-          
-          YoutubePlayer(controller: _controller)
-        ],
-      ),
+    // Aquí quitamos el texto y el padding extra para que el padre controle el diseño
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20), // Bordes redondeados al video
+      child: YoutubePlayer(controller: _controller)
     );
   }
 }
