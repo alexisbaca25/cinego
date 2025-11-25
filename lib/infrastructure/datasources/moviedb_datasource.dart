@@ -4,10 +4,12 @@ import 'package:cinemapedia/domain/entities/actors.dart';
 import 'package:cinemapedia/domain/entities/movies.dart';
 import 'package:cinemapedia/infrastructure/mappers/actor_mapper.dart';
 import 'package:cinemapedia/infrastructure/mappers/movie_mapper.dart';
+import 'package:cinemapedia/infrastructure/mappers/video_maper.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/credits_response.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/movie_details.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/moviedb_response.dart';
 import 'package:dio/dio.dart';
+import 'package:cinemapedia/domain/entities/video.dart';
 
 class MoviedbDatasource extends MoviesDatasource {
   final dio = Dio(
@@ -95,5 +97,53 @@ class MoviedbDatasource extends MoviesDatasource {
         .toList();
     
     return actors;
+  }
+
+  @override
+  Future<List<Movie>> searchMovies(String query) async {
+    if (query.isEmpty) return [];
+
+    final response = await dio.get('/search/movie', 
+      queryParameters: {
+        'query': query
+      }
+    );
+
+    return _jsonToMovies(response.data);
+  }
+
+  @override
+  Future<List<Video>> getYoutubeVideosById(int movieId) async {
+    final response = await dio.get('/movie/$movieId/videos');
+    final moviedbVideosReponse = response.data['results'] as List; // Obtenemos la lista cruda
+
+    final videos = moviedbVideosReponse
+      .where( (video) => video['site'] == 'YouTube' ) // Filtramos solo YouTube
+      .map( (video) => VideoMapper.moviedbVideoToEntity(video) )
+      .toList();
+    
+    return videos;
+  }
+
+  @override
+  Future<List<Genre>> getGenres() async {
+    final response = await dio.get('/genre/movie/list');
+    final List<dynamic> genresJson = response.data['genres'];
+
+    return genresJson.map((json) => Genre(
+      id: json['id'], 
+      name: json['name']
+    )).toList();
+  }
+
+  @override
+  Future<List<Movie>> getMoviesByGenre(int genreId, {int page = 1}) async {
+    final response = await dio.get('/discover/movie', 
+      queryParameters: {
+        'with_genres': genreId,
+        'page': page
+      }
+    );
+    return _jsonToMovies(response.data);
   }
 }

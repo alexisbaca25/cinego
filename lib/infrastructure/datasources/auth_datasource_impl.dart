@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/datasources/auth_datasource.dart';
 import '../../domain/entities/user.dart';
 import '../mappers/user_mapper.dart';
-
 class AuthDatasourceImpl extends AuthDatasource {
   
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -34,12 +33,12 @@ class AuthDatasourceImpl extends AuthDatasource {
       );
 
       final user = credential.user;
-      // Actualizar el nombre del usuario en Firebase
       await user?.updateDisplayName(fullName);
-      
-      if ( user == null ) throw Exception('User creation failed');
+      await user?.reload(); 
+      final updatedUser = _firebaseAuth.currentUser;
 
-      return UserMapper.userToEntity(user);
+      if ( updatedUser == null ) throw Exception('User creation failed');
+      return UserMapper.userToEntity(updatedUser);
 
     } catch (e) {
       throw Exception('Register failed: $e');
