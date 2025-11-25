@@ -7,8 +7,11 @@ class UserMapper {
     return UserEntity(
       id: user.uid,
       email: user.email ?? '',
-      fullName: user.displayName ?? 'No name',
-      photoUrl: user.photoURL,
+      fullName: (user.displayName != null && user.displayName!.isNotEmpty)
+          ? user.displayName!
+          : (user.email != null) 
+              ? user.email!.split('@')[0] 
+              : 'Anónimo',
       isEmailVerified: user.emailVerified
     );
   }

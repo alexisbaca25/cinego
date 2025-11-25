@@ -1,3 +1,4 @@
+import 'package:cinemapedia/presentation/widgets/movies/movies_comments.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
@@ -151,6 +152,9 @@ class _MovieDetail extends StatelessWidget {
              child: VideosFromMovie(movieId: movie.id.toString())
           ),
         ),
+        const SizedBox(height: 20), // Un espacio para separar
+        MovieComments(movieId: movie.id.toString()),
+        const SizedBox(height: 50),
 
         const SizedBox(height: 50),
       ],
