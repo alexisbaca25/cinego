@@ -11,11 +11,9 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
   final SearchMoviesCallback searchMovies;
   List<Movie> initialMovies;
   
-  // Stream para manejar los resultados con debounce
   StreamController<List<Movie>> debouncedMovies = StreamController.broadcast();
   Stream<List<Movie>> get onNewMovies => debouncedMovies.stream;
 
-  // Timer para el debounce
   Timer? _debounceTimer;
 
   SearchMovieDelegate({
@@ -23,55 +21,53 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
     required this.initialMovies,
   });
 
-  // Limpiar streams al cerrar
   void clearStreams() {
     debouncedMovies.close();
   }
 
-  // Lógica de cambio de texto (Debounce)
   void _onQueryChanged(String query) {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
 
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       
-      // Si la búsqueda está vacía, emitimos lista vacía
       if (query.isEmpty) {
         debouncedMovies.add([]);
         return;
       }
 
-      // Llamamos al callback de búsqueda
       final movies = await searchMovies(query);
+
+      // --- MEJORA DE PRECISIÓN ---
+      // Reordenamos la lista localmente para dar prioridad a coincidencias exactas
+      final cleanQuery = query.toLowerCase().trim();
+      
+      movies.sort((a, b) {
+        final titleA = a.title.toLowerCase();
+        final titleB = b.title.toLowerCase();
+
+        // 1. Prioridad Máxima: Coincidencia Exacta
+        if (titleA == cleanQuery && titleB != cleanQuery) return -1;
+        if (titleB == cleanQuery && titleA != cleanQuery) return 1;
+
+        // 2. Prioridad Alta: Empieza con la búsqueda
+        final aStartsWith = titleA.startsWith(cleanQuery);
+        final bStartsWith = titleB.startsWith(cleanQuery);
+
+        if (aStartsWith && !bStartsWith) return -1;
+        if (bStartsWith && !aStartsWith) return 1;
+
+        // 3. Si no, mantenemos el orden de popularidad de la API
+        return 0;
+      });
+      // ---------------------------
+
       initialMovies = movies;
       debouncedMovies.add(movies);
     });
   }
 
-  // Widget para construir los resultados
-  Widget buildResultsAndSuggestions() {
-    return StreamBuilder(
-      initialData: initialMovies,
-      stream: onNewMovies,
-      builder: (context, snapshot) {
-        
-        final movies = snapshot.data ?? [];
-
-        return ListView.builder(
-          itemCount: movies.length,
-          itemBuilder: (context, index) => _MovieItem(
-            movie: movies[index], 
-            onMovieSelected: (context, movie) {
-              clearStreams();
-              close(context, movie);
-            },
-          ),
-        );
-      },
-    );
-  }
-
   @override
-  String get searchFieldLabel => 'Buscar película';
+  String get searchFieldLabel => 'Buscar película...';
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -107,6 +103,26 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
     _onQueryChanged(query);
     return buildResultsAndSuggestions();
   }
+
+  Widget buildResultsAndSuggestions() {
+    return StreamBuilder(
+      initialData: initialMovies,
+      stream: onNewMovies,
+      builder: (context, snapshot) {
+        final movies = snapshot.data ?? [];
+        return ListView.builder(
+          itemCount: movies.length,
+          itemBuilder: (context, index) => _MovieItem(
+            movie: movies[index], 
+            onMovieSelected: (context, movie) {
+              clearStreams();
+              close(context, movie);
+            },
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _MovieItem extends StatelessWidget {
@@ -121,13 +137,19 @@ class _MovieItem extends StatelessWidget {
 
     final textStyles = Theme.of(context).textTheme;
     final size = MediaQuery.of(context).size;
+    final colors = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () {
         onMovieSelected(context, movie);
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        // Agregamos un fondo sutil al hacer hover/tap implícito
+        decoration: BoxDecoration(
+          color: Colors.transparent, 
+          border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1)))
+        ),
         child: Row(
           children: [
             // Image
@@ -137,35 +159,68 @@ class _MovieItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
                   movie.posterPath,
+                  height: 100,
+                  fit: BoxFit.cover,
                   loadingBuilder: (context, child, loadingProgress) => FadeIn(child: child),
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported_rounded, color: Colors.grey),
                 ),
               ),
             ),
     
-            const SizedBox( width: 10 ),
+            const SizedBox( width: 15 ),
             
             // Description
             SizedBox(
-              width: size.width * 0.7,
+              width: size.width * 0.65,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text( movie.title, style: textStyles.titleMedium ),
-    
-                  ( movie.overview.length > 100 )
-                    ? Text( '${movie.overview.substring(0,100)}...' )
-                    : Text( movie.overview ),
-    
+                  
+                  // Título
+                  Text( 
+                    movie.title, 
+                    style: textStyles.titleMedium?.copyWith(fontWeight: FontWeight.bold) 
+                  ),
+                  
+                  const SizedBox(height: 5),
+
+                  // AÑO + Rating (Esto ayuda mucho a la precisión visual)
                   Row(
                     children: [
-                      Icon( Icons.star_half_rounded, color: Colors.yellow.shade800 ),
-                      const SizedBox( width: 5 ),
+                      // Año
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: colors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(5)
+                        ),
+                        child: Text(
+                          movie.releaseDate.year.toString(),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 10),
+
+                      // Estrellas
+                      Icon( Icons.star_rounded, color: Colors.amber.shade800, size: 16 ),
+                      const SizedBox( width: 3 ),
                       Text( 
                         HumanFormats.number(movie.voteAverage, 1),
-                        style: textStyles.bodyMedium!.copyWith(color: Colors.yellow.shade900 ),
+                        style: textStyles.bodyMedium!.copyWith(color: Colors.amber.shade900, fontWeight: FontWeight.bold),
                       ),
                     ],
-                  )
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  // Descripción corta
+                  Text( 
+                    movie.overview,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
