@@ -54,7 +54,7 @@ class _LoginView extends StatelessWidget {
           const Icon( Icons.movie_filter_rounded, color: Colors.white, size: 80 ),
           const SizedBox( height: 10 ),
           const Text(
-            'Cinemapedia',
+            'CineGo',
             style: TextStyle(
               fontSize: 30, 
               color: Colors.white, 
