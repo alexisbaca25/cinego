@@ -89,7 +89,7 @@ class _HomeViewState extends ConsumerState<_HomeView> {
                     children: [
                       Icon(Icons.movie_outlined, color: colors.primary),
                       const SizedBox(width: 5),
-                      Text('Cinemapedia', style: titleStyle),
+                      Text('CineGo', style: titleStyle),
                       const Spacer(),
 
                       // Botón búsqueda
