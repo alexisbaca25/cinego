@@ -109,7 +109,7 @@ class MoviedbDatasource extends MoviesDatasource {
 
   @override
   Future<List<Video>> getYoutubeVideosById(int movieId) async {
-    // Solicitamos videos en Español (es) e Inglés (en)
+    // Pedimos videos en Español (es) e Inglés (en)
     final response = await dio.get('/movie/$movieId/videos', queryParameters: {
       'include_video_language': 'es,en' 
     });
@@ -117,7 +117,10 @@ class MoviedbDatasource extends MoviesDatasource {
     final moviedbVideosReponse = response.data['results'] as List;
 
     final videos = moviedbVideosReponse
-      .where( (video) => video['site'] == 'YouTube' )
+      .where( (video) => 
+        video['site'] == 'YouTube' &&     // Que sea de YouTube
+        (video['type'] == 'Trailer' || video['type'] == 'Teaser')       // <--- FILTRO NUEVO: Solo Trailers
+      ) 
       .map( (video) => VideoMapper.moviedbVideoToEntity(video) )
       .toList();
     
