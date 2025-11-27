@@ -3,18 +3,22 @@ import 'package:cinemapedia/infrastructure/models/moviedb/movie_details.dart';
 import 'package:cinemapedia/infrastructure/models/moviedb/movie_moviedb.dart';
 
 class MovieMapper {
+  
   static Movie movieDBToEntity(MovieMovieDB moviedb) => Movie(
       adult: moviedb.adult,
-      backdropPath: (moviedb.backdropPath!='')
+      backdropPath: (moviedb.backdropPath != '')
           ? 'https://image.tmdb.org/t/p/w500${moviedb.backdropPath}'
           : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoWcWg0E8pSjBNi0TtiZsqu8uD2PAr_K11DA&s',
       genreIds: moviedb.genreIds.map((e) => e.toString()).toList(),
       id: moviedb.id,
       originalLanguage: moviedb.originalLanguage,
       originalTitle: moviedb.originalTitle,
-      overview: moviedb.overview,
+      // Validación de texto vacío
+      overview: (moviedb.overview != '') 
+        ? moviedb.overview 
+        : 'Sin descripción disponible.',
       popularity: moviedb.popularity,
-      posterPath: (moviedb.posterPath!='')
+      posterPath: (moviedb.posterPath != '')
           ? 'https://image.tmdb.org/t/p/w500${moviedb.posterPath}'
           : 'no-poster',
       releaseDate: moviedb.releaseDate,
@@ -26,16 +30,19 @@ class MovieMapper {
 
   static Movie movieDetailsToEntity(MovieDetails moviedb) => Movie(
       adult: moviedb.adult,
-      backdropPath: (moviedb.backdropPath!='')
+      backdropPath: (moviedb.backdropPath != '')
           ? 'https://image.tmdb.org/t/p/w500${moviedb.backdropPath}'
           : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoWcWg0E8pSjBNi0TtiZsqu8uD2PAr_K11DA&s',
       genreIds: moviedb.genres.map((e) => e.name.toString()).toList(),
       id: moviedb.id,
       originalLanguage: moviedb.originalLanguage,
       originalTitle: moviedb.originalTitle,
-      overview: moviedb.overview,
+      // Validación de texto vacío
+      overview: (moviedb.overview != '') 
+        ? moviedb.overview 
+        : 'Sin descripción disponible.',
       popularity: moviedb.popularity,
-      posterPath: (moviedb.posterPath!='')
+      posterPath: (moviedb.posterPath != '')
           ? 'https://image.tmdb.org/t/p/w500${moviedb.posterPath}'
           : 'no-poster',
       releaseDate: moviedb.releaseDate,
